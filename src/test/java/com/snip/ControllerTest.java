@@ -33,6 +33,7 @@ public class ControllerTest {
     @Test
     public void testHello() {
         Response response = get("/snip/hello");
-        assertEquals(response.statusCode(), 200);
+        assertEquals(200, response.statusCode());
+        assertEquals("Hello World!!", response.getBody().asString());
     }
 }

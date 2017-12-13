@@ -13,6 +13,6 @@ public class Controller {
 
     @RequestMapping(method = RequestMethod.GET, path = "/hello", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> hello (){
-        return new ResponseEntity<String>("Hello Wordl!!", HttpStatus.OK);
+        return new ResponseEntity<String>("Hello World!!", HttpStatus.OK);
     }
 }
