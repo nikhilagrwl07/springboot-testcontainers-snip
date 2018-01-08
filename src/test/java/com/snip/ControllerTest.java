@@ -2,38 +2,55 @@ package com.snip;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.springframework.http.MediaType;
 
-import java.io.File;
-
-import static com.jayway.restassured.RestAssured.get;
+import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.when;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 
-@Ignore
-public class ControllerTest {
 
-    @Rule
-    public GenericContainer container = new GenericContainer(
-            new ImageFromDockerfile()
-                    .withFileFromFile("target/springboot-testcontainers-snip-1.0-SNAPSHOT.jar", new File("target/springboot-testcontainers-snip-1.0-SNAPSHOT.jar"))
-                    .withFileFromPath("./Dockerfile", new File("./Dockerfile").toPath())
-    )
-            .withExposedPorts(8080);
+public class ControllerTest extends AbstractControllerTest {
 
-    @Before
-    public void setup() {
-        RestAssured.baseURI = "http://" + container.getContainerIpAddress() + ":" + container.getMappedPort(8080);
+    private static final Logger LOG = LogManager.getLogger(ControllerTest.class);
+
+    @BeforeClass
+    public static void setUpURI() {
+        RestAssured.baseURI = "http://" + springBootContainer.getContainerIpAddress();
+        RestAssured.port = springBootContainer.getMappedPort(8080);
+        RestAssured.basePath = "snip";
     }
 
     @Test
-    public void testHello() {
-        Response response = get("/snip/hello");
-        assertEquals(200, response.statusCode());
-        assertEquals("Hello World!!", response.getBody().asString());
+    public void helloPersonTest() {
+        when().get("/hello/1")
+                .then()
+                .body(equalTo("Hello Steve"))
+                .statusCode(200);
+    }
+
+    @Test
+    public void peopleTest() {
+        Response response = when().get("/people");
+        assertEquals("[{\"id\":1,\"name\":\"Steve\"}]", response.getBody().asString());
+        assertEquals(200, response.getStatusCode());
+    }
+
+    @Test
+    public void createTest() {
+        Person personToSave = new Person();
+        personToSave.setId(2);
+        personToSave.setName("Stefano");
+
+        given().body(personToSave)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .post("/people")
+                .then()
+                .body(equalTo("{\"id\":2,\"name\":\"Stefano\"}"))
+                .statusCode(201);
     }
 }
